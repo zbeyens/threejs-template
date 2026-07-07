@@ -1,0 +1,169 @@
+---
+description: Three.js browser-game design and gameplay doctrine. Use for design passes, visual reviews, playable scene design, HUD/UI decisions, game feel, responsiveness, and browser/canvas proof.
+---
+
+# Three.js Game Design
+
+Own the product as a playable browser/tablet game. A template or game surface
+must feel playable before it feels explanatory: clear verbs, short objectives,
+visible feedback, quick resets, readable controls, and proof from the real
+browser surface.
+
+## Ground Every Design In The Game
+
+Before designing, name:
+
+- the surface;
+- the one gameplay verb;
+- the loop or phase progression;
+- the player outcome;
+- the 3-4 experience pillars every element must serve;
+- the proof surface.
+
+Experience pillars are 3-4 named, one-sentence promises the whole surface
+supports. If a prop, VFX, UI element, or beat serves no pillar, it is noise; cut
+it.
+
+If the idea is mostly reading, a quiz, or touching objects only to unlock text,
+the design is not done.
+
+### Specify Every Mechanic
+
+A named verb is not a spec. Any real mechanic is designed and reviewed with the
+same five fields, so it can be implemented and proven without a second guess:
+
+- **Input** — what the player does.
+- **System** — what the game computes.
+- **Feedback** — what the player perceives.
+- **Parameters** — concrete numbers; flag unproven values with `[PLAYTEST: value — what to validate]`.
+- **Rationale** — why this design is worth shipping.
+
+Ban vague scope: never write "various", "some", "many", or "a few" without a
+count.
+
+## Read-First Sources
+
+1. `VISION.md`.
+2. `README.md`.
+3. `src/game/StarterGame.ts`.
+4. `src/core/**`.
+5. `src/ui/**`.
+6. `tests/visual.spec.ts`.
+7. `scripts/inspect-threejs-canvas.mjs`.
+8. Current docs/GDDs when the user has created game-specific planning artifacts.
+
+## Playable Scene Standard
+
+Each playable scene should have:
+
+- a clear entry objective;
+- one primary gameplay verb;
+- a short loop with readable feedback;
+- a failure, reset, or completion condition;
+- a reward or state change;
+- clean return to the next useful state.
+
+The starter scene should stay generic. Add story, setting, economy, assets, or
+content policy only when a real game needs them.
+
+## Loops & Flow
+
+Name the nested loops:
+
+- **Micro loop:** action -> feedback -> reward -> repeat.
+- **Scene loop:** learn the verb -> variation -> completion beat.
+- **Meta loop:** reward -> progress -> next objective.
+
+Keep challenge matched to player skill. Failure should be quick to recover
+from unless the game intentionally chooses a harsher genre.
+
+## Game Feel Is Doctrine
+
+Responsive feedback is not optional polish; it is how the player reads what
+just happened.
+
+- **Layered feedback.** One satisfying event combines small responses such as
+  sound, particles, HUD tick, eased motion, and light.
+- **Ease, do not linearize.** Overshoot for a pop, ease-out to settle, ease-in
+  for wind-up.
+- **Anticipation and follow-through.** Timing gives actions weight.
+- **No hard cuts.** Use short transitions for scene changes when possible.
+- **Scale to importance.** Routine actions get small feedback; completion beats
+  can get larger feedback.
+- **Camera, not body.** Impact moves the visual camera/pivot, not the simulated
+  transform.
+- **Accessibility toggles.** Reduce-motion and reduce-flashing options are
+  required once effects become more than minimal.
+
+## Visual Language
+
+- Low-poly stylized premium is the default starter direction.
+- Strong silhouettes and landmarks beat decorative clutter.
+- UI is restrained and readable on desktop and tablet/mobile.
+- HUD text stays short.
+- Long explanation belongs in docs, menus, journals, or debrief screens.
+- Interactions must be large enough for touch and obvious enough for keyboard.
+
+## Three.js And Browser Proof
+
+For visual/gameplay changes, verify the real surface when feasible:
+
+- `npm run build`;
+- focused Playwright spec such as `npm test -- tests/visual.spec.ts`;
+- `npm run verify:visual` or `npm run inspect:canvas`;
+- Browser/Playwright screenshot at desktop and narrow/mobile widths for major
+  visual changes;
+- console errors checked;
+- canvas nonblank, correctly framed, and interactive;
+- text not overlapping UI containers.
+
+Respect the browser budget: compressed assets, pooled particles, paused loops
+when the tab is hidden, audio resumed on first interaction, and small startup
+payloads.
+
+If proof is infeasible, record the blocker or explicit waiver in the plan.
+
+## Design Self-Audit
+
+Before closeout, score each dimension 1-5. Any dimension below 4 blocks the
+pass until fixed or explicitly waived with a reason:
+
+- player outcome;
+- gameplay verb clarity;
+- loop and flow;
+- game feel;
+- readability and landmarks;
+- HUD restraint;
+- accessibility;
+- browser/canvas proof.
+
+## Design Anti-Patterns
+
+- Quiz as the main gameplay loop unless the game is explicitly a quiz game.
+- Empty rooms with collectibles and text panels.
+- Long in-action text paragraphs.
+- Tiny touch targets or unclear prompts.
+- Visual polish that hides weak gameplay.
+- Over-juicing routine actions.
+- Placeholder labels, WIP copy, disabled showcase actions, or fake future features.
+- A 3D scene that only looks good from one viewport.
+- Browser proof skipped for canvas-heavy changes.
+
+## Design Process
+
+1. Read source docs and current implementation before proposing a design.
+2. Identify the gameplay verb, player outcome, and proof surface.
+3. Specify each real mechanic with Input/System/Feedback/Parameters/Rationale.
+4. Prefer improving the real implemented route over detached mockups unless the
+   user explicitly asks for variants or prototypes.
+5. For contested design questions, use `prototype` or a small variant harness,
+   decide quickly, then delete or fold the result into real code/docs.
+6. Prove with build/tests/browser/canvas checks appropriate to the change.
+7. Update `VISION.md` when the design decision becomes reusable doctrine.
+
+## Done
+
+A design pass is done when playable behavior or a plan is source-backed,
+browser/canvas proof is recorded or waived with reason, real mechanics use the
+five-field formula, and the surface can be explained in one sentence naming the
+player's action and outcome.

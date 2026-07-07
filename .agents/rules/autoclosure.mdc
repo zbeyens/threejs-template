@@ -1,0 +1,32 @@
+---
+description: Close already-applied or dirty current-tree Sira work until no accepted actionable findings remain.
+argument-hint: '[current tree | branch | applied work | plan path]'
+disable-model-invocation: true
+---
+
+# Autoclosure
+
+Use this when work already exists in the tree and the user asks whether
+anything is missing, to clean it up, or to close it safely.
+
+## Flow
+
+1. Read latest user request, `VISION.md`, and any named plan/spec.
+2. Inspect the current diff/status without reverting unrelated work.
+3. Classify touched surfaces: gameplay, UI/HUD, Three.js/canvas, docs/plans,
+   tests, agent workflow, config, assets.
+4. Run the relevant checks or record N/A:
+   - `npm run build`;
+   - focused Playwright/tests;
+   - browser/canvas proof;
+   - source-backed docs audit;
+   - `npx skiller@latest apply` plus mirror audit for agent changes.
+5. Run `autoreview` or an equivalent self-review for non-trivial diffs.
+6. Fix accepted P0/P1 and acceptance-breaking issues. Convert lower-priority
+   cleanup into explicit follow-up notes unless the user asked for polish.
+7. Update `VISION.md` if the closure reveals reusable doctrine.
+
+## Stop
+
+Stop when the current requested work is cohesive, verified, and any remaining
+risk is explicit. Do not keep polishing indefinitely.

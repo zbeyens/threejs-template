@@ -1,0 +1,41 @@
+# Default agents to apply when --agents flag is not specified
+default_agents = ["claude-code"]
+
+# --- Fork Configuration ---
+
+[rules]
+merge_strategy = "cursor"
+
+[backup]
+enabled = false
+
+# --- Global Configuration ---
+
+[skills]
+enabled = true
+
+# Automatic .gitignore management
+[gitignore]
+enabled = false
+
+# MCP (Model Context Protocol) server configuration
+[mcp]
+enabled = true
+merge_strategy = "merge"
+
+# --- MCP Server Definitions ---
+[mcp_servers.blender]
+command = "/opt/homebrew/bin/uvx"
+args = ["--python", "3.11", "blender-mcp"]
+env = { UV_PYTHON_PREFERENCE = "only-managed", DISABLE_TELEMETRY = "true", BLENDER_HOST = "localhost", BLENDER_PORT = "9876" }
+
+# --- Agent-Specific Configuration ---
+
+[agents.claude-code]
+enabled = true
+
+[agents.codex]
+enabled = true
+
+[agents.cursor]
+enabled = false

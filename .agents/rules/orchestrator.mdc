@@ -1,0 +1,51 @@
+---
+description: Coordinate multiple Sira workstreams through durable child threads or explicit handoff state when the user asks for orchestration.
+argument-hint: '[on | off | status | workstream request]'
+disable-model-invocation: true
+---
+
+# Orchestrator
+
+Use only when the user wants this thread to coordinate multiple workstreams or
+child threads instead of executing everything locally.
+
+## Commands
+
+- `$orchestrator on`
+- `$orchestrator off`
+- `$orchestrator status`
+
+## Rules
+
+- Do not claim orchestration merely because subagents or worktrees exist.
+- A durable child thread must have a visible Codex thread id/url when the tool
+  is available.
+- Record owner, checkout/path, branch if any, port if any, proof target, status,
+  and blocker for each workstream.
+- If durable thread tools are unavailable, record the limitation and continue
+  locally only when the latest user request allows it.
+- Parent thread owns intake, routing, status, conflict arbitration, and final
+  synthesis.
+- Child/workstream owns implementation and proof for its assigned slice.
+
+## Sira Defaults
+
+- Local docs/agent workflow changes can run in the current checkout unless the
+  user requests parallelization.
+- Code-changing parallel work needs separate checkouts only when concurrent
+  mutation would be safer than serial work.
+- Dev-server ports must be unique per running checkout. Use Vite with
+  `npm run dev -- --port <port>`.
+- No GitHub issue or PR flow is implied by this skill.
+
+## Handoff Table
+
+Use this shape in plans:
+
+| Workstream | Owner/thread | Checkout | Port | Scope | Proof | Status | Blocker |
+|---|---|---|---|---|---|---|---|
+
+## Done
+
+Orchestration is done when all child/workstream rows are complete, blocked, or
+explicitly handed off, and the parent plan records the rollup evidence.

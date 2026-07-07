@@ -38,3 +38,27 @@ npm run inspect:canvas
 - `tests/visual.spec.ts` is the browser proof that the starter is rendering and interactive.
 
 No assets are required for the starter scene. Add models, textures, audio, or level data when the game actually needs them.
+
+## Agent Setup
+
+This template includes the same agent workflow surface as the source game setup:
+
+- `.agents/**` for source rules, generated skills, Skiller config, scripts, references, and agent-native workflow docs.
+- `.claude/**`, `.codex/**`, `.mcp.json`, and `skills-lock.json` for local Claude/Codex/MCP setup.
+- `AGENTS.md` and `CLAUDE.md` generated from `.agents/AGENTS.md`.
+- `docs/plans/templates/**` for reusable `autogoal`, task, docs, browser, package/API, and agent-native plan templates.
+- `VISION.md` as the project doctrine agents should read before changing gameplay, design, proof, or workflow policy.
+
+After editing `.agents/AGENTS.md` or `.agents/rules/*.mdc`, run:
+
+```bash
+npx skiller@latest apply
+```
+
+Then audit generated mirrors before committing:
+
+```bash
+rg "TODO|pending|<old-project-term-regex>" AGENTS.md CLAUDE.md .agents .claude .codex docs/plans/templates
+```
+
+`docs/plans/templates/**` are reusable templates. Active runtime plans belong directly under `docs/plans/` and should not be copied between games.
