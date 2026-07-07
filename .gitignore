@@ -1,0 +1,13 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+blob-report/
+artifacts/
+.playwright-mcp/
+*.log
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+.vercel

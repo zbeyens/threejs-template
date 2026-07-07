@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#182033" />
+    <title>Three.js Game Template</title>
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="game-canvas" aria-label="Three.js game canvas"></canvas>
+
+      <section id="hud" aria-live="polite">
+        <div class="hud-row">
+          <div class="hud-chip">
+            <span class="hud-chip__label">Objective</span>
+            <strong id="objective-value">Collect the signal cubes</strong>
+          </div>
+          <div class="hud-chip">
+            <span class="hud-chip__label">Score</span>
+            <strong id="score-value">0 / 5</strong>
+          </div>
+        </div>
+        <div id="toast-box"></div>
+      </section>
+
+      <div id="touch-controls" aria-hidden="true">
+        <div id="touch-stick">
+          <div id="touch-knob"></div>
+        </div>
+      </div>
+
+      <div id="menu-root"></div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
