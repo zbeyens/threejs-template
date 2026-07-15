@@ -36,7 +36,7 @@ Examples:
 - `looping abandoned cathedral ambience for dark fantasy arena, distant wind through stone arches, subtle torch crackle, no melody, seamless loop`
 - `tiny premium menu confirm click, soft mechanical latch, warm sparkle tail, no harsh beep`
 
-Avoid prompts that are only mood words (`epic`, `AAA`, `cool`). Name the gameplay event.
+Avoid prompts that are only mood words (`epic`, `premium`, `cool`). Name the gameplay event.
 
 ## Generation Strategy
 

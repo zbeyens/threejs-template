@@ -11,6 +11,7 @@ Generate images using Google's Gemini image API.
 
 Usage:
     uv run generate_image.py --prompt "your image description" --filename "output.png" [--resolution 1K|2K|4K] [--api-key KEY]
+    uv run generate_image.py probe   # prints GEMINI_API_KEY=SET|MISSING and exits
 """
 
 import argparse
@@ -26,7 +27,17 @@ def get_api_key(provided_key: str | None) -> str | None:
     return os.environ.get("GEMINI_API_KEY")
 
 
+def cmd_probe() -> None:
+    """Print the SET|MISSING credential contract line used by skip rules and audits."""
+    status = "SET" if os.environ.get("GEMINI_API_KEY") else "MISSING"
+    print(f"GEMINI_API_KEY={status}")
+
+
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "probe":
+        cmd_probe()
+        return
+
     parser = argparse.ArgumentParser(
         description="Generate images using Google's Gemini image API"
     )
@@ -42,13 +53,16 @@ def main():
     )
     parser.add_argument(
         "--input-image", "-i",
-        help="Optional input image path for editing/modification"
+        dest="input_images",
+        action="append",
+        help="Optional reference image path; repeat for multiple references"
     )
     parser.add_argument(
         "--resolution", "-r",
         choices=["1K", "2K", "4K"],
-        default="1K",
-        help="Output resolution: 1K (default), 2K, or 4K"
+        default=None,
+        help="Output resolution: 1K, 2K (default for generation), or 4K; "
+             "when editing, defaults to match the input image size"
     )
     parser.add_argument(
         "--api-key", "-k",
@@ -79,33 +93,43 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Load input image if provided
-    input_image = None
+    input_images = []
     output_resolution = args.resolution
-    if args.input_image:
+    max_input_dim = 0
+    for input_path in args.input_images or []:
         try:
-            input_image = PILImage.open(args.input_image)
-            print(f"Loaded input image: {args.input_image}")
-
-            # Auto-detect resolution if not explicitly set by user
-            if args.resolution == "1K":  # Default value
-                # Map input image size to resolution
-                width, height = input_image.size
-                max_dim = max(width, height)
-                if max_dim >= 3000:
-                    output_resolution = "4K"
-                elif max_dim >= 1500:
-                    output_resolution = "2K"
-                else:
-                    output_resolution = "1K"
-                print(f"Auto-detected resolution: {output_resolution} (from input {width}x{height})")
+            input_image = PILImage.open(input_path)
+            input_image.load()
+            input_images.append(input_image)
+            width, height = input_image.size
+            max_input_dim = max(max_input_dim, width, height)
+            print(f"Loaded input image: {input_path} ({width}x{height})")
         except Exception as e:
-            print(f"Error loading input image: {e}", file=sys.stderr)
+            print(f"Error loading input image {input_path}: {e}", file=sys.stderr)
             sys.exit(1)
 
+    # Auto-detect from the largest reference when the user does not force size.
+    if input_images and output_resolution is None:
+        if max_input_dim >= 3000:
+            output_resolution = "4K"
+        elif max_input_dim >= 1500:
+            output_resolution = "2K"
+        else:
+            output_resolution = "1K"
+        print(
+            f"Auto-detected resolution: {output_resolution} "
+            f"(largest input edge {max_input_dim}px)"
+        )
+    if output_resolution is None:
+        output_resolution = "2K"  # production reference default per SKILL.md
+
     # Build contents (image first if editing, prompt only if generating)
-    if input_image:
-        contents = [input_image, args.prompt]
-        print(f"Editing image with resolution {output_resolution}...")
+    if input_images:
+        contents = [*input_images, args.prompt]
+        print(
+            f"Generating from {len(input_images)} reference image(s) "
+            f"with resolution {output_resolution}..."
+        )
     else:
         contents = args.prompt
         print(f"Generating image with resolution {output_resolution}...")
@@ -122,9 +146,20 @@ def main():
             )
         )
         
-        # Process response and convert to PNG
+        # Process response and convert to PNG. Gemini can return a valid
+        # response with no parts (for example after a safety or provider
+        # finish); surface that reason instead of throwing on None.
         image_saved = False
-        for part in response.parts:
+        parts = response.parts or []
+        if not parts:
+            prompt_feedback = getattr(response, "prompt_feedback", None)
+            candidates = getattr(response, "candidates", None)
+            print(
+                "Error: Gemini returned no response parts. "
+                f"prompt_feedback={prompt_feedback!r} candidates={candidates!r}",
+                file=sys.stderr,
+            )
+        for part in parts:
             if part.text is not None:
                 print(f"Model response: {part.text}")
             elif part.inline_data is not None:
@@ -140,15 +175,26 @@ def main():
 
                 image = PILImage.open(BytesIO(image_data))
 
-                # Ensure RGB mode for PNG (convert RGBA to RGB with white background if needed)
-                if image.mode == 'RGBA':
-                    rgb_image = PILImage.new('RGB', image.size, (255, 255, 255))
-                    rgb_image.paste(image, mask=image.split()[3])
-                    rgb_image.save(str(output_path), 'PNG')
-                elif image.mode == 'RGB':
-                    image.save(str(output_path), 'PNG')
+                suffix = output_path.suffix.lower()
+                if suffix in {".jpg", ".jpeg"}:
+                    # JPEG has no alpha channel: flatten onto white
+                    if image.mode in ("RGBA", "LA", "P"):
+                        rgba = image.convert("RGBA")
+                        flat = PILImage.new("RGB", rgba.size, (255, 255, 255))
+                        flat.paste(rgba, mask=rgba.split()[3])
+                        flat.save(str(output_path), "JPEG", quality=92)
+                    else:
+                        image.convert("RGB").save(str(output_path), "JPEG", quality=92)
                 else:
-                    image.convert('RGB').save(str(output_path), 'PNG')
+                    # PNG supports alpha: preserve it (logos/icons/UI/decals need transparency)
+                    if image.mode not in ("RGB", "RGBA"):
+                        has_alpha = "A" in image.mode or (
+                            image.mode == "P" and "transparency" in image.info
+                        )
+                        image = image.convert("RGBA" if has_alpha else "RGB")
+                    image.save(str(output_path), "PNG")
+                    if image.mode == "RGBA":
+                        print("Alpha channel preserved (RGBA PNG).")
                 image_saved = True
         
         if image_saved:

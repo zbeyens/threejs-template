@@ -1,64 +1,75 @@
 # Three.js Game Template
 
-A compact browser-game starter copied from a production Vite/React/Three.js setup and stripped back to reusable parts.
+A compact Vite, React, TypeScript, and Three.js browser-game starter with a
+generic agent production pipeline.
 
-## What Is Included
+## Runtime
 
-- Vite + TypeScript with strict compiler settings.
-- Three.js renderer, resize handling, fixed game loop, keyboard movement, and touch joystick input.
-- React overlay controls for render quality.
-- Playwright desktop/mobile canvas tests that verify a nonblank canvas, player movement, and clean browser errors.
-- A canvas inspection script that writes screenshots and JSON reports under `artifacts/canvas-inspection`.
+Included:
 
-## Start
+- strict TypeScript and Vite;
+- a playable Three.js starter scene;
+- keyboard and touch controls;
+- React quality controls;
+- desktop/mobile Playwright canvas proof;
+- screenshot and diagnostics output from `inspect:canvas`.
 
 ```bash
 npm install
 npm run dev
-```
-
-Open [http://127.0.0.1:5188](http://127.0.0.1:5188).
-
-## Verify
-
-```bash
 npm run build
 npm test
 npm run inspect:canvas
 ```
 
-`npm test` starts its own Vite server on port `5187` so it does not collide with your dev server.
+The current starter runtime stays deliberately small. It ships no story, game
+genre, visual style, asset family, world builder, or production game content.
 
-## Edit Points
+## Main Edit Points
 
-- `src/game/StarterGame.ts` owns the scene, player movement, collectibles, diagnostics, and render quality.
-- `src/core/Renderer.ts` owns Three.js renderer defaults.
-- `src/core/InputController.ts` maps keyboard and touch joystick input to a movement vector.
-- `src/ui/QualityMenu.tsx` is the React HUD overlay.
-- `tests/visual.spec.ts` is the browser proof that the starter is rendering and interactive.
+- `src/game/StarterGame.ts`: scene, player movement, collectibles, diagnostics.
+- `src/core/Renderer.ts`: renderer defaults.
+- `src/core/InputController.ts`: keyboard and touch input.
+- `src/ui/QualityMenu.tsx`: React overlay.
+- `tests/visual.spec.ts`: desktop/mobile rendering and interaction proof.
 
-No assets are required for the starter scene. Add models, textures, audio, or level data when the game actually needs them.
+## Agent Production Pipeline
+
+The generic game flow is:
+
+```text
+game-design -> [game-visual] -> game-build -> game-polish
+```
+
+Use `game-full` when a request spans the whole flow. Gameplay/runtime changes
+load `gameblocks`; 3D assets route through `game-3d-asset-pipeline`; authored
+3D uses BlenderMCP when required; `world-builder` bootstraps a dev-only
+builder/catalog harness when a project first needs one.
+
+The template has no default art direction. Each game's GDD owns its reference
+pixels, target images, scorecard, camera/state, exclusions, and proof.
+
+Asset routing:
+
+- Tripo: model generation, texturing, stylization, conversion, download only.
+- Mixamo through Browser: biped autorig and animation.
+- BlenderMCP or another GDD-approved owner: non-biped rigging/animation and
+  authored 3D work.
+- Shared runtime factories: procedural assets.
 
 ## Agent Setup
 
-This template includes the same agent workflow surface as the source game setup:
+- `.agents/AGENTS.md` and `.agents/rules/*.mdc` are source truth.
+- `.agents/skills/**` contains generated local mirrors and vendored skills.
+- `.claude/**`, `.codex/**`, and `.mcp.json` carry agent/MCP configuration.
+- `AGENTS.md` and `CLAUDE.md` are generated mirrors.
+- `skills-lock.json` tracks only external `diagnosing-bugs` and `grilling`.
 
-- `.agents/**` for source rules, generated skills, Skiller config, scripts, references, and agent-native workflow docs.
-- `.claude/**`, `.codex/**`, `.mcp.json`, and `skills-lock.json` for local Claude/Codex/MCP setup.
-- `AGENTS.md` and `CLAUDE.md` generated from `.agents/AGENTS.md`.
-- `docs/plans/templates/**` for reusable `autogoal`, task, docs, browser, package/API, and agent-native plan templates.
-- `VISION.md` as the project doctrine agents should read before changing gameplay, design, proof, or workflow policy.
-
-After editing `.agents/AGENTS.md` or `.agents/rules/*.mdc`, run:
+After changing agent sources:
 
 ```bash
 npx skiller@latest apply
 ```
 
-Then audit generated mirrors before committing:
-
-```bash
-rg "TODO|pending|<old-project-term-regex>" AGENTS.md CLAUDE.md .agents .claude .codex docs/plans/templates
-```
-
-`docs/plans/templates/**` are reusable templates. Active runtime plans belong directly under `docs/plans/` and should not be copied between games.
+Then audit generated mirrors, stale skill references, secrets, and copied cache
+files before publishing.

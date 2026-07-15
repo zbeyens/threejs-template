@@ -11,6 +11,12 @@ Create game-ready audio assets for Three.js projects. This skill consolidates ga
 
 Provider: ElevenLabs.
 
+Run this skill only when the active GDD names an audio asset that procedural or
+recorded project audio cannot cover. Probe ElevenLabs only after selection and
+record outputs or the blocker directly in the GDD.
+
+Resolve `<this-skill-dir>` in the commands below in this order: `~/.claude/skills/threejs-audio-generator`, `~/.codex/skills/threejs-audio-generator`, `~/.agents/skills/threejs-audio-generator`, or repo `skills/threejs-audio-generator`.
+
 ## When To Use
 
 Use this skill for:
@@ -22,63 +28,51 @@ Use this skill for:
 - Cleanup: isolate or denoise dialogue before voice conversion, TTS replacement, or transcription.
 - Three.js integration: Web Audio loading, looping, sprite/manifest mapping, volume groups, pause/resume, user gesture unlock.
 
-For premium/AAA/showcase game work, audio is not cosmetic. Generate or integrate at least a minimal interaction audio set for the main loop unless the user explicitly requests mute/offline-only output or credentials/API attempts are blocked.
+Polish wording alone never mandates generated audio; the approved scope still
+needs an explicit ambience/SFX/voice decision or blocker.
 
 ## API Key
 
-Never store API keys in skill files or browser/game code. The script checks:
+Never store API keys in skill files or browser/game code, and never paste a key value into a report. The script reads `--api-key` or `ELEVENLABS_API_KEY`.
 
-1. `--api-key`
-2. `ELEVENLABS_API_KEY`
-
-Before declaring the key unavailable in a `threejs-game-director` workflow, run the director credential probe and paste its literal SET/MISSING output:
+Step 0, before declaring the key unavailable: run this skill's own probe and paste its literal output into the report.
 
 ```bash
-bash ~/.codex/skills/threejs-game-director/scripts/probe_asset_credentials.sh
+python3 <this-skill-dir>/scripts/threejs_audio_asset.py probe   # prints ELEVENLABS_API_KEY=SET|MISSING
 ```
 
-For Claude installs:
+`ELEVENLABS_API_KEY=MISSING` is only a valid blocker after this selected skill's
+probe. Keys defined only in a shell profile can be absent from the process env;
+if the plain probe prints MISSING unexpectedly, wrap it:
+`zsh -lc 'source ~/.zprofile 2>/dev/null || true; source ~/.zshrc 2>/dev/null || true; python3 <this-skill-dir>/scripts/threejs_audio_asset.py probe'`.
 
-```bash
-bash ~/.claude/skills/threejs-game-director/scripts/probe_asset_credentials.sh
-```
-
-If the probe says `ELEVENLABS_API_KEY=SET` but the script sees no key, run through a shell that sources the user's profile:
-
-```bash
-zsh -c 'source "$HOME/.zprofile" 2>/dev/null; source "$HOME/.zshrc" 2>/dev/null; python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py probe'
-```
+Audio-specific: add `--validate` to the probe to call ElevenLabs `GET /user` and confirm the key actually works (prints `VALID_USER=...`); use it when a key is present but a generation still fails. A valid key can still be blocked by an out-of-credit or plan-tier limit — those surface as an `HTTP 4xx` from a real generation attempt. Report that as a purchase/plan blocker, do not silently skip.
 
 ## Required Reference
 
 Load `references/audio-workflows.md` before building a game audio plan, generating multiple assets, wiring runtime audio, cleaning/converting voices, or claiming premium game audio.
 
-Track it in the reference ledger. Do not mark the audio phase complete while this reference is skipped.
+Record the selected reference directly in the active GDD; do not create a
+separate reference ledger.
 
 ## Tool Script
 
 Run from the user's current game project directory:
 
 ```bash
-python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py --help
-```
-
-Claude install path:
-
-```bash
-python3 ~/.claude/skills/threejs-audio-generator/scripts/threejs_audio_asset.py --help
+python3 <this-skill-dir>/scripts/threejs_audio_asset.py --help
 ```
 
 Probe:
 
 ```bash
-python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py probe
+python3 <this-skill-dir>/scripts/threejs_audio_asset.py probe
 ```
 
 Generate SFX:
 
 ```bash
-python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py sfx \
+python3 <this-skill-dir>/scripts/threejs_audio_asset.py sfx \
   --prompt "tight futuristic boost pickup, bright transient, short sparkling tail, arcade racing game" \
   --duration 1.2 \
   --prompt-influence 0.65 \
@@ -88,7 +82,7 @@ python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py s
 Generate looping ambience:
 
 ```bash
-python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py sfx \
+python3 <this-skill-dir>/scripts/threejs_audio_asset.py sfx \
   --prompt "seamless cyber resort mini golf ambience, distant surf, soft neon transformer hum, gentle crowd bed" \
   --duration 12 \
   --loop \
@@ -99,7 +93,7 @@ python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py s
 Generate TTS/announcer line:
 
 ```bash
-python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py tts \
+python3 <this-skill-dir>/scripts/threejs_audio_asset.py tts \
   --text "Perfect shot." \
   --voice-id JBFqnCBsd6RMkjVDRZzb \
   --out assets/audio/voice/perfect-shot.mp3
@@ -108,7 +102,7 @@ python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py t
 Clean dialogue:
 
 ```bash
-python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py isolate \
+python3 <this-skill-dir>/scripts/threejs_audio_asset.py isolate \
   --input assets/audio/source/noisy-boss-line.wav \
   --out assets/audio/voice/boss-line-clean.mp3
 ```
@@ -116,7 +110,7 @@ python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py i
 Convert a scratch performance to a target voice:
 
 ```bash
-python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py voice-change \
+python3 <this-skill-dir>/scripts/threejs_audio_asset.py voice-change \
   --input assets/audio/source/scratch-boss-line.wav \
   --voice-id JBFqnCBsd6RMkjVDRZzb \
   --remove-background-noise \
@@ -137,7 +131,7 @@ python3 ~/.codex/skills/threejs-audio-generator/scripts/threejs_audio_asset.py v
 Report:
 
 - Credential probe output or real blocker.
-- Reference ledger.
+- Selected reference path.
 - Generated/processed file paths.
 - Prompts/text/input files, voice IDs, durations, loop flags, and output formats.
 - Runtime integration notes: audio groups, trigger events, loop behavior, unlock gesture, pause/resume, volume/mute controls.

@@ -1,6 +1,7 @@
 # Three.js Integration
 
-Use this after `threejs-3d-generator` generates or post-processes a model.
+Use this after Tripo produces a model, Mixamo produces a biped, or the
+GDD-approved authored lane produces another rigged asset.
 
 ## Preferred Outputs
 
@@ -33,35 +34,28 @@ action.play();
 mixer.update(deltaSeconds);
 ```
 
-Animation intake notes:
+Animation intake rules:
 
-- A batched retarget returns ONE GLB whose clips are named `NlaTrack`, `NlaTrack.001`, … in request order. The names carry no meaning: map clips to presets by index against the order you requested, rename them after load (`clip.name = 'walk'`), then select by your own names.
-- Log `gltf.animations.map(c => `${c.name} ${c.tracks.length} tracks`)` after load. A healthy humanoid clip drives many bones; clips with only a handful of tracks mean the upstream auto-rig was degenerate — fix the rig, not the runtime.
-- Do NOT strip or neutralize twist-bone tracks (`UpperarmTwist`, `ForearmTwist`, …) on v1.0 rigs: Tripo skins most of the limb mesh to the twist bones, and their baked values differ greatly from the GLB rest pose — removing the tracks collapses the limbs into the torso. Tripo's slightly open, palm-forward hands are the preset house style, not corruption.
-- Never retarget with `animate_in_place=true` (it corrupts the bake — mirrored limbs, exploded skinning). Convert to in-place at import instead, and do it precisely:
-  - Touch ONLY the top root bone's position track (`Root.position`). Tripo FBX clips bake position tracks on EVERY bone with values that differ from FBXLoader's rest transforms; filtering Hip/Pelvis or pattern-matching broadly collapses the skeleton into a hunch.
-  - Zero the HORIZONTAL components only — keep Y. Vertical root motion IS the animation for jumps (and the bob in gaits); deleting the whole track turns a jump into grounded hand-waving.
+- Humanoids must come from one Mixamo character: autorig once, then download every clip against that same rig. Do not runtime-retarget separate skeletons when the source can be identical.
+- Assemble one GLB containing one skinned character and clearly named clips (`idle`, `walk`, `run`, `swim`, `tread`, action names). Animation-only FBX files should contribute actions, not duplicate meshes or armatures.
+- Blender may assemble the GLB or transfer garment/armor weights when needed. It must not retarget clips that already share the Mixamo skeleton.
+- Log `gltf.animations.map(c => `${c.name} ${c.duration}s ${c.tracks.length} tracks`)` after load and fail loudly on missing or duplicate clip names.
+- Keep vertical root motion. For locomotion that must be in-place, pin only horizontal translation on the Hips/Root position track. Mixamo commonly names it `mixamorigHips.position`; offline assembly may rename it `Hips.position` or `Root.position`.
 
 ```ts
 for (const clip of clips) {
   for (const tr of clip.tracks) {
-    if (tr.name !== 'Root.position') continue;
+    if (!/(?:mixamorig)?Hips\.position$|Root\.position$/i.test(tr.name)) continue;
     const v = tr.values, x0 = v[0], z0 = v[2];
     for (let i = 0; i < v.length; i += 3) { v[i] = x0; v[i + 2] = z0; }
   }
 }
 ```
 
-FBX intake specifics (v1.0 humanoid retargets):
+For Mixamo downloads, use FBX Binary at 30 FPS. Download the base character with skin; later clips may be without skin when the assembly tool supports animation-only FBX. Prefer offline conversion to one GLB over shipping multiple FBX files and `FBXLoader` in the runtime.
 
-- `FBXLoader` lives at `three/addons/loaders/FBXLoader.js` and imports `fflate`; bundler projects get it from npm automatically, but import-map/CDN pages must map it (e.g. `"fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/browser.js"`).
-- Use ONE FBX per animation (the pipeline does this automatically) and play each file's `animations[0]` as exported. The variant order of duplicate takes differs per file — `animations[0]` is always the correct one.
-
-- `FBXLoader` emits each take twice under different node-path prefixes (`Armature.001|walk_…` and `Armature|Armature.001|walk_…`). Keep the variant with the SHALLOWER path (fewer `|` segments); the deep variant's tracks bind incorrectly.
-- Clips carry real names (`walk_normal_m_remap`, `idle_251105_remap`) — select by keyword (slash arrives as an attack/swing name), not by index.
-- Play the clips otherwise untouched. Every loader-side "fix" beyond the single root-position strip has been tested and makes things worse.
-- FBXLoader produces Phong materials (darker than GLB PBR). For final art parity, convert FBX→GLB offline (Blender import/export or FBX2glTF) — the corrected animation survives conversion.
-- Tripo preset retargeting only works on `spec=tripo` rigs. A `spec=mixamo` rig is for external animation pipelines (Mixamo clips, custom libraries) — retarget those in a DCC tool or at runtime with `SkeletonUtils.retargetClip`, and expect to supply bone-name mappings and check bind-pose orientation when skeleton conventions differ.
+Authored animation exports may arrive with generic action names. Rename clips
+during intake and validate the actual motion visually.
 
 ## Asset Intake Checklist
 
@@ -81,10 +75,13 @@ Inspect before shipping:
 
 ## Game Asset Strategy
 
-- Use `threejs-3d-generator` for hero assets, characters, creatures, bosses, buildings, weapons, signature props, and complex pickups.
+- Use Tripo only for model generation and postprocessing. Send bipeds to Mixamo
+  through Browser; send non-biped rigs and animation to the GDD-approved
+  authored owner.
 - Use procedural Three.js kits for high-volume repeated detail such as bolts, windows, track plates, rails, debris, markers, and background silhouettes.
 - Use `threejs-image-generator` for concept art, texture references, decals, logos, UI icons, and backdrop images.
-- Combine: image-generator concept -> 3D-generator model -> Three.js import -> procedural set dressing -> visual scorecard.
+- Combine: approved image source -> generated model -> authored finish when
+  needed -> Three.js import -> procedural set dressing -> GDD scorecard.
 
 ## Performance Discipline
 
@@ -99,7 +96,8 @@ Inspect before shipping:
 
 - Model too large/small: normalize bounds in an asset wrapper group.
 - Wrong orientation: set a wrapper rotation, or use Tripo image `orientation=align_image` for image inputs.
-- Animations move out of place: keep exported root motion intact, then strip only horizontal root-position components in code as shown above. Do not retarget with `animate_in_place=true`.
+- Animations move out of place: keep exported root motion intact, then strip
+  only horizontal root-position components in code as shown above.
 - Too expensive: lower `face_limit`, use `smart_low_poly`, reduce texture quality/size, or convert with a face limit.
 - Materials too dark/bright: check color space, tone mapping, environment, and light exposure.
 - Collision too complex: build primitive proxies in Three.js and keep Tripo mesh visual-only.
@@ -108,10 +106,12 @@ Inspect before shipping:
 
 Report:
 
-- 3D generator task IDs.
+- Provider used per operation: Tripo, Mixamo through Browser, or BlenderMCP.
+- Tripo task IDs when Tripo was used.
+- Mixamo source FBX, animation names, download settings, and same-character proof when Mixamo was used.
 - Downloaded asset paths.
 - Model version and generation options.
-- Post-process tasks: texture, rig, animation, conversion.
+- Post-process tasks: texture, creature rig/animation, conversion, or offline humanoid GLB assembly.
 - Three.js import files changed.
 - Renderer diagnostics before/after import.
 - Screenshot evidence in active gameplay.

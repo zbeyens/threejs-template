@@ -1,73 +1,62 @@
 # Three.js Template Vision
 
-This repo is a public starter for building browser games with Vite, React,
-Three.js, strict TypeScript, Playwright proof, and agent-native workflow.
+This repository is a public starter for browser games built with Vite, React,
+TypeScript, Three.js, fast browser proof, and an agent-native production flow.
 
 ## Product Doctrine
 
-- The first screen is the playable starter scene, not a landing page.
-- The starter must stay generic: no fixed story world, content policy, economy,
-  monetization model, or asset pipeline until a real game asks for it.
-- Every game built from this template should start with a clear verb, visible
-  feedback, responsive camera/framing, keyboard controls, touch controls, and
-  fast reset paths.
-- Gameplay text stays short during action. Longer explanation belongs in docs,
-  menus, journals, debriefs, or design artifacts.
-- The template should be easy to delete from: sample systems are teaching
-  scaffolds, not permanent architecture.
+- The first screen is playable, not a landing page.
+- The starter locks no audience, genre, story, world, economy, camera, gameplay
+  loop, content policy, or visual direction.
+- Sample systems are disposable teaching scaffolds.
+- A game starts with clear verbs, visible feedback, responsive framing,
+  keyboard/touch controls, and fast deterministic reset or proof states.
 
 ## Design Doctrine
 
-- Three.js scenes must be nonblank, framed, responsive, and interactive across
-  desktop and mobile when feasible.
-- Game feel matters: actions should produce layered feedback, eased motion,
-  readable state changes, and a return to rest.
-- UI should be quiet, readable, and touch-safe. Avoid fake future buttons, WIP
-  labels, and oversized explanatory panels inside gameplay.
-- Use real browser proof for visual/gameplay decisions; screenshots alone do
-  not prove interaction.
-- Add visual assets only when they teach the game or prove the pipeline. Do not
-  bloat the starter with decorative assets.
+- Each game owns one GDD containing decisions, visual references, targets,
+  constraints, assets, proof, waivers, and status.
+- Reference pixels—not template taste—own visual direction.
+- Generated targets must be buildable in the selected engine, camera, budget,
+  and asset lanes.
+- Real interaction and final pixels matter more than confidence, diagnostics, or
+  screenshot-production success.
+
+## Production Doctrine
+
+- Use `game-design -> [game-visual] -> game-build -> game-polish`.
+- Use `game-full` for requests spanning the complete flow.
+- Use `gameblocks` for gameplay/runtime work.
+- Route every 3D asset through `game-3d-asset-pipeline`.
+- Tripo is generation-only. Mixamo owns biped autorig/animation. BlenderMCP or a
+  GDD-approved creature owner handles non-biped rigs and authored animation.
+- Bootstrap builder/catalog infrastructure only when a game needs it; do not
+  burden the starter runtime with copied production content.
 
 ## Runtime Doctrine
 
-- Use `npm` scripts.
-- Main commands:
-  - `npm run build`
-  - `npm test`
-  - `npm run verify:visual`
-  - `npm run inspect:canvas`
-  - `npm run dev -- --port <port>`
-- Browser proof should check console errors, page errors, canvas visibility,
-  canvas variance/nonblank state, responsive layout, and interaction.
-- Keep generated artifacts, reports, screenshots, build output, and local env
-  files out of commits unless the user explicitly asks otherwise.
-- Blender MCP is optional local tooling for asset workflows; ordinary build/test
-  proof must not depend on Blender.
+- Use the repository's current npm scripts as owner truth.
+- Verify canvas visibility, variance, framing, responsive layout, interaction,
+  console errors, and page errors.
+- Keep provider calls and generated assets in tooling flows, never client-side
+  API paths.
+- Keep local env files, credentials, generated reports, and caches out of
+  commits.
 
-## Agent Workflow Doctrine
+## Agent Doctrine
 
-- `.agents/AGENTS.md` and `.agents/rules/*.mdc` are the editable source of
-  truth for agent instructions.
-- Run `npx skiller@latest apply` after agent-rule edits.
-- `docs/plans/templates/**` are reusable plan templates.
-- Active runtime plans live directly under `docs/plans/` and should not be
-  copied between games.
-- Goal-backed work should record evidence, not confidence theater.
-
-## Source Order
-
-1. Latest user instruction and active goal plan.
-2. `VISION.md`.
-3. `README.md`.
-4. `AGENTS.md` and `.agents/AGENTS.md`.
-5. Current source and tests.
-6. Current docs/GDDs when a game-specific plan exists.
+- Edit `.agents/AGENTS.md` and `.agents/rules/*.mdc`, then run
+  `npx skiller@latest apply`.
+- Generated skill mirrors are evidence, not edit targets.
+- Persist hard-won generic production lessons through `game-memory`.
+- Do not import another game's assets, GDDs, proofs, product rules, or visual
+  opinions.
 
 ## Proof Doctrine
 
-- Code changes normally prove with `npm run build` and focused tests.
-- Gameplay/canvas changes need Playwright or Browser proof when feasible.
-- Agent-workflow changes need `npx skiller@latest apply`, generated mirror
-  audit, and stale project-term audit.
-- Public template changes need a secret audit before push.
+- Logic and workflow changes use focused automated checks.
+- Rendered changes require bounded browser proof.
+- Visual acceptance requires opening the exact final capture at original
+  resolution and recording `PASS` or `FIX` against the GDD.
+- Agent-workflow changes require mirror regeneration, exact skill inventory,
+  stale-term audit, and secret/cache audit.
